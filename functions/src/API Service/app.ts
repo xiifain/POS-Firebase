@@ -1,6 +1,5 @@
 import * as express from "express";
 import * as admin from "firebase-admin";
-import * as storage from "firebase-storage";
 
 enum HTTP {
     OK = 200,
@@ -39,4 +38,38 @@ app.get("/products", async (_, response) => {
       console.log(error);
       response.sendStatus(503);
     }
+});
+
+app.get("/:productName", async (request , response) => {
+
+  try {
+    const { productName } = request.params;
+
+    const doc = await admin
+      .firestore()
+      .collection("Products")
+      .doc(productName)
+      .get();
+
+    if (!doc.exists) {
+      console.log("No matching documents.");
+      response.sendStatus(404);
+      return;
+    }
+
+    else {
+      response.json(doc.data());
+    }
+
+  } catch (error) {
+    console.log(error);
+    response.sendStatus(503);
+  }
+});
+
+
+app.post("/product", async (request, response) => {
+
+  await admin.firestore().collection("Products").doc(request.body.sku).set(request.body);
+  response.sendStatus(200);
 });
